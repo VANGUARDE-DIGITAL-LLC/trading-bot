@@ -1,0 +1,101 @@
+:root {
+    --bg-color: #f4f7f9;
+    --card-bg: #ffffff;
+    --primary: #00c805; /* Robinhood Green */
+    --text-dark: #1e293b;
+    --accent: #2563eb;
+    --border: #e2e8f0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-dark);
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.budget-card {
+    background: var(--text-dark);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    display: block;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.card {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.market-view, .trends-view {
+    grid-column: span 1;
+}
+
+.trade-action {
+    grid-column: span 2;
+}
+
+input, select {
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    transition: 0.2s;
+}
+
+#search-btn, .execute-btn {
+    background: var(--primary);
+    color: white;
+    padding: 10px 20px;
+    font-weight: bold;
+}
+
+.trend-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.trend-tab {
+    background: var(--border);
+    padding: 5px 15px;
+}
+
+.trend-tab:hover {
+    background: var(--accent);
+    color: white;
+}
