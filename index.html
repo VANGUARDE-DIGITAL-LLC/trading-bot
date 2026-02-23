@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeBot | Long-Term Investing</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Portfolio Dashboard</h1>
+            <div class="budget-card">
+                <span class="label">Available Budget:</span>
+                <span id="budget-amount" class="value">$0.00</span>
+            </div>
+        </header>
+
+        <main class="dashboard-grid">
+            <section class="card market-view">
+                <h2>Market Review</h2>
+                <div class="search-bar">
+                    <input type="text" id="ticker-input" placeholder="Enter Symbol (e.g. AAPL)">
+                    <button id="search-btn">View Price</button>
+                </div>
+                <div id="price-display" class="price-display">
+                    <h3 id="stock-symbol">--</h3>
+                    <p id="current-price">Select a stock to see price</p>
+                </div>
+            </section>
+
+            <section class="card trends-view">
+                <h2>Market Trends</h2>
+                <div class="trend-controls">
+                    <button class="trend-tab" data-days="10">10 Day</button>
+                    <button class="trend-tab" data-days="15">15 Day</button>
+                    <button class="trend-tab" data-days="30">30 Day</button>
+                </div>
+                <div class="trend-visual" id="trend-content">
+                    <p>Select a timeframe to analyze trends.</p>
+                </div>
+            </section>
+
+            <section class="card trade-action">
+                <h2>Execute Trade</h2>
+                <form id="trade-form">
+                    <div class="input-group">
+                        <label for="trade-type">Action</label>
+                        <select id="trade-type">
+                            <option value="buy">Buy</option>
+                            <option value="sell">Sell</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="quantity">Quantity</label>
+                        <input type="number" id="quantity" min="1" value="1">
+                    </div>
+                    <button type="submit" class="execute-btn">Place Order</button>
+                </form>
+            </section>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
