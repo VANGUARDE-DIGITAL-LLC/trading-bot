@@ -1,4 +1,3 @@
-// 1. INITIALIZE SUPABASE
 // Replace these with the keys from your Supabase Project Settings
 const SUPABASE_URL = 'https://your-project-url.supabase.co';
 const SUPABASE_KEY = 'your-anon-public-key';
