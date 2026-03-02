@@ -44,7 +44,7 @@ tradeForm.addEventListener('submit', async (e) => {
     // UI Feedback: Disable button while saving
     tradeForm.classList.add('loading');
 
-    // INSERT DATA INTO SUPABASE
+   /*-- // INSERT DATA INTO SUPABASE
     const { data, error } = await supabase
         .from('trades')
         .insert([
@@ -54,7 +54,19 @@ tradeForm.addEventListener('submit', async (e) => {
                 type: type, 
                 price: price 
             }
-        ]);
+        ]);--*/
+
+    // Ensure this matches your Supabase table name exactly!
+    const { data, error } = await supabase
+    .from('Stock Tracker') 
+    .insert([
+        { 
+            symbol: state.currentStock.symbol, 
+            amount: qty, 
+            type: type, 
+            price: state.currentStock.price 
+        }
+    ]);
 
     tradeForm.classList.remove('loading');
 
