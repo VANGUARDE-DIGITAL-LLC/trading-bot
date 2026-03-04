@@ -1,7 +1,7 @@
 // 1. INITIALIZE SUPABASE
 const SUPABASE_URL = 'https://your-project-url.supabase.co';
 const SUPABASE_KEY = 'your-anon-public-key';
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let state = {
     budget: 5000.00,
