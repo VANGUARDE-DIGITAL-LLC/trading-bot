@@ -1,6 +1,6 @@
 // Replace these with the keys from your Supabase Project Settings
-const SUPABASE_URL = 'https://your-project-url.supabase.co';
-const SUPABASE_KEY = 'your-anon-public-key';
+const SUPABASE_URL = 'https://huulaazgkcypjctntntn.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_3NHwfCSfNR_DXxzQjVR5aw_Wz3wIrK5';
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let state = {
