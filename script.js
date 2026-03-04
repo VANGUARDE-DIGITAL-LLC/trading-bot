@@ -1,7 +1,8 @@
-// Replace these with the keys from your Supabase Project Settings
-const SUPABASE_URL = 'https://huulaazgkcypjctntntn.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_3NHwfCSfNR_DXxzQjVR5aw_Wz3wIrK5';
+// 1. INITIALIZE SUPABASE
+const SUPABASE_URL = 'https://your-project-url.supabase.co';
+const SUPABASE_KEY = 'your-anon-public-key';
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 let state = {
     budget: 5000.00,
     currentStock: { symbol: '', price: 0 },
@@ -19,21 +20,40 @@ const searchBtn = document.getElementById('search-btn');
 const trendContent = document.getElementById('trend-content');
 const tradeForm = document.getElementById('trade-form');
 
-// NEW FUNCTION: Read from Trading_BData_Table
+// --- NEW: CONNECTION DIAGNOSTIC FUNCTION ---
+async function checkDatabaseConnection() {
+    console.log("Checking Supabase connection...");
+    try {
+        const { data, error } = await supabase.from('Trading_BData_Table').select('id').limit(1);
+        
+        if (error) {
+            console.error("❌ Connection Error:", error.message);
+            alert("Database Connection Failed: " + error.message);
+        } else {
+            console.log("✅ Successfully connected to Trading_BData_Table!");
+        }
+    } catch (err) {
+        console.error("❌ Network Error:", err);
+        alert("Could not reach Supabase. Check your URL and Internet connection.");
+    }
+}
+
+// Read from Trading_BData_Table
 async function syncPortfolio() {
+    console.log("Syncing portfolio data...");
     const { data, error } = await supabase
         .from('Trading_BData_Table')
         .select('*');
 
     if (error) {
-        console.error('Error fetching data:', error);
+        console.error('❌ Sync Error:', error.message);
         return;
     }
     
-    // Calculate current budget based on trades in the DB
+    console.log("Rows retrieved:", data.length);
+    
     let spent = 0;
     data.forEach(trade => {
-        // Using bracket notation for hyphenated column names from your screenshot
         const price = trade['current-price'] || 0;
         spent += price; 
     });
@@ -44,7 +64,8 @@ async function syncPortfolio() {
 
 // Initialize
 function init() {
-    syncPortfolio(); // Fetch latest data from Supabase on load
+    checkDatabaseConnection(); // Run diagnostic first
+    syncPortfolio(); 
 }
 
 // 1. Review Stock Price
@@ -57,6 +78,7 @@ searchBtn.addEventListener('click', () => {
     
     document.getElementById('stock-symbol').textContent = state.currentStock.symbol;
     document.getElementById('current-price').textContent = `$${state.currentStock.price}`;
+    console.log(`Stock searched: ${symbol} at $${state.currentStock.price}`);
 });
 
 // 2. Trend Analysis
@@ -67,7 +89,7 @@ document.querySelectorAll('.trend-tab').forEach(button => {
     });
 });
 
-// 3 & 4. UPDATED: Write to Trading_BData_Table
+// 3 & 4. Write to Trading_BData_Table with Error Handling
 tradeForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const qty = document.getElementById('quantity').value;
@@ -80,13 +102,10 @@ tradeForm.addEventListener('submit', async (e) => {
         return;
     }
 
-    if (type === 'buy' && totalCost > state.budget) {
-        alert("Insufficient funds for this long-term trade.");
-        return;
-    }
+    console.log(`Attempting to save trade: ${state.currentStock.symbol} at $${price}`);
 
-    // Insert into Supabase using your exact column headings
-    const { error } = await supabase
+    // Insert into Supabase
+    const { data, error } = await supabase
         .from('Trading_BData_Table')
         .insert([
             { 
@@ -96,10 +115,12 @@ tradeForm.addEventListener('submit', async (e) => {
         ]);
 
     if (error) {
+        console.error("❌ Insert Error:", error.message);
         alert("Database Error: " + error.message);
     } else {
+        console.log("✅ Trade saved successfully!");
         alert(`Success! Recorded ${state.currentStock.symbol} in your portfolio.`);
-        syncPortfolio(); // Refresh budget after successful trade
+        syncPortfolio(); 
     }
 });
 
