@@ -1,7 +1,10 @@
 // 1. INITIALIZE SUPABASE
 const SUPABASE_URL = 'https://khgpbkcmjmajiclhwgix.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoZ3Bia2Ntam1hamljbGh3Z2l4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NzgzMjIsImV4cCI6MjA4ODA1NDMyMn0.72R1rX_XXtjTwf4XEpPVaWFDpwLoNuIQGRvDBDDNSBU';
-const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+//const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// FIX: Using 'db' prevents the naming conflict with the 'supabase' library
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let state = {
     budget: 5000.00,
@@ -13,35 +16,15 @@ let state = {
     }
 };
 
-// UI Elements
 const budgetEl = document.getElementById('budget-amount');
 const tickerInput = document.getElementById('ticker-input');
 const searchBtn = document.getElementById('search-btn');
 const trendContent = document.getElementById('trend-content');
 const tradeForm = document.getElementById('trade-form');
 
-// DIAGNOSTIC: Check connection
-async function checkDatabaseConnection() {
-    console.log("Checking Supabase connection...");
-    try {
-        const { data, error } = await _supabase.from('Trading_BData_Table').select('id').limit(1);
-        if (error) {
-            console.error("❌ Connection Error:", error.message);
-        } else {
-            console.log("✅ Successfully connected to Trading_BData_Table!");
-        }
-    } catch (err) {
-        console.error("❌ Network Error:", err);
-    }
-}
-
-// Read from Trading_BData_Table
+// Function to calculate budget based on trade history
 async function syncPortfolio() {
-    console.log("Syncing portfolio data...");
-    const { data, error } = await _supabase
-        .from('Trading_BData_Table')
-        .select('*');
-
+    const { data, error } = await db.from('symbol').select('*');
     if (error) {
         console.error('❌ Sync Error:', error.message);
         return;
@@ -49,22 +32,16 @@ async function syncPortfolio() {
     
     let spent = 0;
     data.forEach(trade => {
-        // Using bracket notation for hyphenated column names from your screenshot
-        const price = trade['current-price'] || 0;
-        spent += price; 
+        const total = trade.amount * trade.price;
+        if (trade.type === 'buy') spent += total;
+        if (trade.type === 'sell') spent -= total;
     });
     
     state.budget = 5000.00 - spent;
     budgetEl.textContent = `$${state.budget.toLocaleString()}`;
 }
 
-// Initialize
-function init() {
-    checkDatabaseConnection();
-    syncPortfolio(); 
-}
-
-// 1. Review Stock Price
+// Search Function
 searchBtn.addEventListener('click', () => {
     const symbol = tickerInput.value.toUpperCase();
     if (!symbol) return alert("Please enter a symbol");
@@ -76,42 +53,35 @@ searchBtn.addEventListener('click', () => {
     document.getElementById('current-price').textContent = `$${state.currentStock.price}`;
 });
 
-// 2. Trend Analysis
-document.querySelectorAll('.trend-tab').forEach(button => {
-    button.addEventListener('click', (e) => {
-        const days = e.target.getAttribute('data-days');
-        trendContent.innerHTML = `<strong>${days}-Day Analysis:</strong> <p>${state.trends[days]}</p>`;
-    });
-});
-
-// 3 & 4. Write to Trading_BData_Table
+// Buy/Sell Function
 tradeForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const qty = document.getElementById('quantity').value;
+    const qty = parseFloat(document.getElementById('quantity').value);
+    const type = document.getElementById('trade-type').value;
     const price = parseFloat(state.currentStock.price);
+    const totalCost = qty * price;
 
-    if (price === 0) {
-        alert("Please search for a stock first.");
-        return;
-    }
+    if (price === 0) return alert("Search for a stock first!");
+    if (type === 'buy' && totalCost > state.budget) return alert("Insufficient funds!");
 
-    // Insert into Supabase using '_supabase'
-    const { error } = await _supabase
-        .from('Trading_BData_Table')
+    // Write to 'symbol' table using your schema columns
+    const { error } = await db
+        .from('symbol')
         .insert([
             { 
-                'stock-symbol': state.currentStock.symbol, 
-                'current-price': price 
+                symbol: state.currentStock.symbol, 
+                amount: qty, 
+                type: type, 
+                price: price 
             }
         ]);
 
     if (error) {
-        console.error("❌ Insert Error:", error.message);
         alert("Database Error: " + error.message);
     } else {
-        alert(`Success! Recorded ${state.currentStock.symbol} in your portfolio.`);
-        syncPortfolio(); 
+        alert(`Successfully recorded ${type} order for ${state.currentStock.symbol}`);
+        syncPortfolio(); // Automatically updates the budget on the screen
     }
 });
 
-init();
+syncPortfolio(); // Run on load
