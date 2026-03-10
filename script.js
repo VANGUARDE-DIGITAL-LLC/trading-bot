@@ -3,7 +3,6 @@ const SUPABASE_URL = 'https://khgpbkcmjmajiclhwgix.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoZ3Bia2Ntam1hamljbGh3Z2l4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NzgzMjIsImV4cCI6MjA4ODA1NDMyMn0.72R1rX_XXtjTwf4XEpPVaWFDpwLoNuIQGRvDBDDNSBU';
 //const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// FIX: Using 'db' prevents the naming conflict with the 'supabase' library
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let state = {
@@ -22,9 +21,11 @@ const searchBtn = document.getElementById('search-btn');
 const trendContent = document.getElementById('trend-content');
 const tradeForm = document.getElementById('trade-form');
 
-// Function to calculate budget based on trade history
+// Function to calculate budget by reading all rows in "Stock Tracker"
 async function syncPortfolio() {
-    const { data, error } = await db.from('symbol').select('*');
+    console.log("Syncing portfolio from Stock Tracker...");
+    const { data, error } = await db.from('Stock Tracker').select('*');
+    
     if (error) {
         console.error('❌ Sync Error:', error.message);
         return;
@@ -32,7 +33,8 @@ async function syncPortfolio() {
     
     let spent = 0;
     data.forEach(trade => {
-        const total = trade.amount * trade.price;
+        // Calculation logic for long-term portfolio tracking
+        const total = (trade.amount || 0) * (trade.price || 0);
         if (trade.type === 'buy') spent += total;
         if (trade.type === 'sell') spent -= total;
     });
@@ -41,7 +43,7 @@ async function syncPortfolio() {
     budgetEl.textContent = `$${state.budget.toLocaleString()}`;
 }
 
-// Search Function
+// 1. Review Stock Price
 searchBtn.addEventListener('click', () => {
     const symbol = tickerInput.value.toUpperCase();
     if (!symbol) return alert("Please enter a symbol");
@@ -53,7 +55,15 @@ searchBtn.addEventListener('click', () => {
     document.getElementById('current-price').textContent = `$${state.currentStock.price}`;
 });
 
-// Buy/Sell Function
+// 2. Trend Analysis
+document.querySelectorAll('.trend-tab').forEach(button => {
+    button.addEventListener('click', (e) => {
+        const days = e.target.getAttribute('data-days');
+        trendContent.innerHTML = `<strong>${days}-Day Analysis:</strong> <p>${state.trends[days]}</p>`;
+    });
+});
+
+// 3. Execute Trade (Writes to "Stock Tracker" table)
 tradeForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const qty = parseFloat(document.getElementById('quantity').value);
@@ -64,9 +74,9 @@ tradeForm.addEventListener('submit', async (e) => {
     if (price === 0) return alert("Search for a stock first!");
     if (type === 'buy' && totalCost > state.budget) return alert("Insufficient funds!");
 
-    // Write to 'symbol' table using your schema columns
+    // Insert order into your specific schema
     const { error } = await db
-        .from('symbol')
+        .from('Stock Tracker')
         .insert([
             { 
                 symbol: state.currentStock.symbol, 
@@ -79,9 +89,10 @@ tradeForm.addEventListener('submit', async (e) => {
     if (error) {
         alert("Database Error: " + error.message);
     } else {
-        alert(`Successfully recorded ${type} order for ${state.currentStock.symbol}`);
-        syncPortfolio(); // Automatically updates the budget on the screen
+        alert(`Success! Order for ${state.currentStock.symbol} recorded.`);
+        syncPortfolio(); // Automatically recalculates budget
     }
 });
 
 syncPortfolio(); // Run on load
+
