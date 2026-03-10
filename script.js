@@ -20,28 +20,25 @@ const searchBtn = document.getElementById('search-btn');
 const trendContent = document.getElementById('trend-content');
 const tradeForm = document.getElementById('trade-form');
 
-// --- NEW: CONNECTION DIAGNOSTIC FUNCTION ---
+// DIAGNOSTIC: Check connection
 async function checkDatabaseConnection() {
     console.log("Checking Supabase connection...");
     try {
-        const { data, error } = await supabase.from('Trading_BData_Table').select('id').limit(1);
-        
+        const { data, error } = await _supabase.from('Trading_BData_Table').select('id').limit(1);
         if (error) {
             console.error("❌ Connection Error:", error.message);
-            alert("Database Connection Failed: " + error.message);
         } else {
             console.log("✅ Successfully connected to Trading_BData_Table!");
         }
     } catch (err) {
         console.error("❌ Network Error:", err);
-        alert("Could not reach Supabase. Check your URL and Internet connection.");
     }
 }
 
 // Read from Trading_BData_Table
 async function syncPortfolio() {
     console.log("Syncing portfolio data...");
-    const { data, error } = await supabase
+    const { data, error } = await _supabase
         .from('Trading_BData_Table')
         .select('*');
 
@@ -50,10 +47,9 @@ async function syncPortfolio() {
         return;
     }
     
-    console.log("Rows retrieved:", data.length);
-    
     let spent = 0;
     data.forEach(trade => {
+        // Using bracket notation for hyphenated column names from your screenshot
         const price = trade['current-price'] || 0;
         spent += price; 
     });
@@ -64,7 +60,7 @@ async function syncPortfolio() {
 
 // Initialize
 function init() {
-    checkDatabaseConnection(); // Run diagnostic first
+    checkDatabaseConnection();
     syncPortfolio(); 
 }
 
@@ -78,7 +74,6 @@ searchBtn.addEventListener('click', () => {
     
     document.getElementById('stock-symbol').textContent = state.currentStock.symbol;
     document.getElementById('current-price').textContent = `$${state.currentStock.price}`;
-    console.log(`Stock searched: ${symbol} at $${state.currentStock.price}`);
 });
 
 // 2. Trend Analysis
@@ -89,23 +84,19 @@ document.querySelectorAll('.trend-tab').forEach(button => {
     });
 });
 
-// 3 & 4. Write to Trading_BData_Table with Error Handling
+// 3 & 4. Write to Trading_BData_Table
 tradeForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const qty = document.getElementById('quantity').value;
-    const type = document.getElementById('trade-type').value;
     const price = parseFloat(state.currentStock.price);
-    const totalCost = qty * price;
 
     if (price === 0) {
         alert("Please search for a stock first.");
         return;
     }
 
-    console.log(`Attempting to save trade: ${state.currentStock.symbol} at $${price}`);
-
-    // Insert into Supabase
-    const { data, error } = await supabase
+    // Insert into Supabase using '_supabase'
+    const { error } = await _supabase
         .from('Trading_BData_Table')
         .insert([
             { 
@@ -118,7 +109,6 @@ tradeForm.addEventListener('submit', async (e) => {
         console.error("❌ Insert Error:", error.message);
         alert("Database Error: " + error.message);
     } else {
-        console.log("✅ Trade saved successfully!");
         alert(`Success! Recorded ${state.currentStock.symbol} in your portfolio.`);
         syncPortfolio(); 
     }
